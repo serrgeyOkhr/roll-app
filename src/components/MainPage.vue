@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { DiceComponent } from "./Dice.vue";
+import DiceComponent from "./Dice.vue";
 import { ref } from "@vue/reactivity";
 export default {
   name: "MainComponent",
@@ -52,4 +52,8 @@ export default {
 };
 </script>
 
-<style></style>
+<style>
+.diceSelector {
+  display: flex;
+}
+</style>

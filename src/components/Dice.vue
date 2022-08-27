@@ -40,13 +40,12 @@ export default {
     // const diceNumber = ref(0);
     const diceValue = toRef(props, "dice_value");
     const allData = toRef(props, "data");
-    // console.log(allData.value[diceValue]);
     // console.log(allData.value["d20"]);
     function changeDiceNumber(type = "increase") {
       if (type === "increase") {
-        allData.value[diceValue] += 1;
+        allData.value[diceValue.value] += 1;
       } else {
-        allData.value[diceValue] -= 1;
+        allData.value[diceValue.value] -= 1;
       }
     }
     return {
