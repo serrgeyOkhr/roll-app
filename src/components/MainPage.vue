@@ -1,312 +1,59 @@
 <template>
-  <div class="container">
-    <h3>Roll Dice</h3>
-    <!-- <pre v-if="diceThrow.used_dice !== undefined">{{
-      diceThrow.used_dice
-    }}</pre> -->
-    <q-separator />
-    <div
-      class="diceTray"
-      :class="{
-        critMissTray:
-          diceThrow.output === 1 &&
-          diceThrow.used_dice.length === 1 &&
-          diceThrow.used_dice.lastIndexOf('d20') === 0,
-        critTray:
-          diceThrow.output === 20 &&
-          diceThrow.used_dice.length === 1 &&
-          (diceThrow.value['d20'].length === 1 ||
-            diceThrow.specialRoll === 'adv') &&
-          diceThrow.used_dice.lastIndexOf('d20') === 0,
-      }"
+  <q-card class="pages">
+    <div class="container">
+      <q-tab-panels v-model="tab" animated>
+        <q-tab-panel name="alarms">
+          <div class="text-h6">Alarms</div>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        </q-tab-panel>
+
+        <q-tab-panel name="movies">
+          <div class="text-h6">Movies</div>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        </q-tab-panel>
+        <q-tab-panel name="mails">
+          <DiceBag />
+        </q-tab-panel>
+      </q-tab-panels>
+
+      <!-- <q-separator /> -->
+    </div>
+    <q-tabs
+      v-model="tab"
+      dense
+      :shrink="true"
+      class="bg-grey-3"
+      align="justify"
+      narrow-indicator
     >
-      <!-- Here will be a dice results -->
-      <div
-        class="diceTrayFloor"
-        :class="{
-          critMissFloor:
-            diceThrow.output === 1 &&
-            diceThrow.used_dice.length === 1 &&
-            diceThrow.used_dice.lastIndexOf('d20') === 0,
-          critFloor:
-            diceThrow.output === 20 &&
-            diceThrow.used_dice.length === 1 &&
-            (diceThrow.value['d20'].length === 1 ||
-              diceThrow.specialRoll === 'adv') &&
-            diceThrow.used_dice.lastIndexOf('d20') === 0,
-        }"
-      >
-        <span v-for="(dice, index) in diceThrow.used_dice" :key="index">
-          <span> {{ diceThrow.value[dice] }} </span>
-          <!-- <pre> {{ dice }} </pre> -->
-        </span>
-        <span v-if="diceThrow.output && modifier > 0"> + </span>
-        <span v-if="diceThrow.output && modifier != 0">{{ modifier }}</span>
-        <span v-if="diceThrow.output">=</span>
-        <span class="text-h2" v-if="diceThrow.output">
-          {{ modifier + diceThrow.output }}
-        </span>
-      </div>
-    </div>
-    <div class="savedRolls">
-      <!-- Saved rolls -->
-      <div class="savedRoll">
-        <!-- v-for='(roll, index)' in rolls :key=index -->
-      </div>
-    </div>
-    <div class="diceSelector">
-      <!-- active selector component -->
-      <DiceComponent
-        v-for="(dice, index) in diceNumbers"
-        :dice_value="index"
-        :data="diceNumbers"
-        :key="index"
-      />
-    </div>
-    <div class="actionPlate">
-      <!-- selected dice + modifier + action button -->
-      <div class="selected_dice_wrapper">
-        <span
-          class="selected_dice"
-          v-for="(dice, index) in diceNumbers"
-          :key="index"
-          :class="{ show: dice > 0 }"
-        >
-          {{ dice }}{{ index }} +
-        </span>
-      </div>
-      <div class="modifier">
-        <input class="modifier_input" type="number" v-model="modifier" />
-      </div>
-      <div class="action">
-        <button
-          @click="rollDisadvantage"
-          v-if="
-            diceNumbers['d20'] === 1 &&
-            diceNumbers['d12'] == 0 &&
-            diceNumbers['d10'] == 0 &&
-            diceNumbers['d8'] == 0 &&
-            diceNumbers['d6'] == 0 &&
-            diceNumbers['d4'] == 0 &&
-            diceNumbers['d2'] == 0 &&
-            diceNumbers['d100'] == 0
-          "
-        >
-          dis
-        </button>
-        <button @click="rollDice">ROLL</button>
-        <button
-          @click="rollAdvantage"
-          v-if="
-            diceNumbers['d20'] === 1 &&
-            diceNumbers['d12'] == 0 &&
-            diceNumbers['d10'] == 0 &&
-            diceNumbers['d8'] == 0 &&
-            diceNumbers['d6'] == 0 &&
-            diceNumbers['d4'] == 0 &&
-            diceNumbers['d2'] == 0 &&
-            diceNumbers['d100'] == 0
-          "
-        >
-          adv
-        </button>
-        <button @click="resetDice">reset</button>
-      </div>
-    </div>
-    <!-- <pre> {{ resultRoll }} </pre> -->
-  </div>
+      <q-tab name="alarms" label="Alarms" />
+      <q-tab name="movies" label="Movies" />
+      <q-tab name="mails" label="Mails" />
+    </q-tabs>
+  </q-card>
 </template>
 
 <script>
-import DiceComponent from "./Dice.vue";
+import DiceBag from "./DiceBag.vue";
 import { ref } from "@vue/reactivity";
 export default {
   name: "MainComponent",
   components: {
-    DiceComponent,
+    DiceBag,
   },
   setup() {
-    const API_URL = "https://lit-brushlands-54519.herokuapp.com/api/roll";
-    const diceNumbers = ref({
-      d20: 0,
-      d12: 0,
-      d10: 0,
-      d8: 0,
-      d6: 0,
-      d4: 0,
-      d2: 0,
-      d100: 0,
-    });
-    const modifier = ref(0);
-    const resultRoll = ref(null);
-    let diceThrow = ref({});
-    function setDefaultDiceThrow() {
-      diceThrow.value.output = 0;
-      diceThrow.value.used_dice = [];
-      diceThrow.value.value = {};
-    }
-    function rollDice() {
-      setDefaultDiceThrow();
-      getSpecialResult(diceNumbers);
-    }
-    // function resultSum(value) {
-    //   const dice_result = ref(0);
-    //   console.log(value);
-    //   for (const iterator in value) {
-    //     value[iterator].forEach((el) => {
-    //       dice_result.value += el;
-    //     });
-    //   }
-    //   return dice_result.value;
-    // }
-    function format_result(result, specialRoll = undefined) {
-      diceThrow.value.raw_value = result;
-      diceThrow.value.specialRoll = specialRoll;
-      if (specialRoll === "dis") {
-        diceThrow.value.output = result["d20"].sort((a, b) => a - b)[0];
-      } else if (specialRoll === "adv") {
-        diceThrow.value.output = result["d20"].sort((a, b) => b - a)[0];
-      } else {
-        for (const i in result) {
-          result[i].forEach((el) => {
-            diceThrow.value.output += el;
-          });
-        }
-      }
-      for (const i in result) {
-        if (result[i].length > 0) {
-          diceThrow.value.used_dice.push(i);
-          // let ms = {};
-          diceThrow.value.value[i] = result[i];
-          // diceThrow.value.value.push(ms);
-        }
-      }
-    }
-
-    function resetDice() {
-      diceNumbers.value.d10 = 0;
-      diceNumbers.value.d100 = 0;
-      diceNumbers.value.d12 = 0;
-      diceNumbers.value.d2 = 0;
-      diceNumbers.value.d4 = 0;
-      diceNumbers.value.d6 = 0;
-      diceNumbers.value.d8 = 0;
-      diceNumbers.value.d20 = 0;
-      modifier.value = 0;
-    }
-
-    function getSpecialResult(data, id) {
-      const body = JSON.stringify(data.value);
-      let myHeaders = new Headers({
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      });
-      fetch(API_URL, {
-        method: "POST",
-        headers: myHeaders,
-        body: body,
-      })
-        .then((response) => response.json())
-        .then((result) => {
-          format_result(result, id);
-        });
-    }
-    function rollDisadvantage() {
-      setDefaultDiceThrow();
-      const data = ref({
-        d20: 2,
-      });
-      getSpecialResult(data, "dis");
-    }
-    function rollAdvantage() {
-      setDefaultDiceThrow();
-      const data = ref({
-        d20: 2,
-      });
-      getSpecialResult(data, "adv");
-    }
     return {
-      diceNumbers,
-      rollDisadvantage,
-      rollAdvantage,
-      modifier,
-      resultRoll,
-      diceThrow,
-      rollDice,
-      resetDice,
+      tab: ref("mails"),
     };
   },
 };
 </script>
 
 <style>
-.diceSelector {
+.pages {
+  height: 100vh;
   display: flex;
-}
-
-.selected_dice {
-  font-size: 16px;
-  margin-left: 5px;
-  display: none;
-}
-
-.show {
-  display: block;
-}
-.modifier {
-  display: flex;
-}
-.modifier_input {
-  width: 50px;
-}
-
-.selected_dice_wrapper {
-  border: 1px solid;
-  display: flex;
-  min-width: 40%;
-}
-.action {
-  display: flex;
-}
-.actionPlate {
-  display: flex;
-}
-.diceTray {
-  min-height: 10vh;
-  border: 3px solid #fff;
-  border-radius: 15px;
-  position: relative;
-  width: 95%;
-  margin: 0 auto;
-  /* background-color: #2c1e55; */
-  box-shadow: 2px 5px 10px -5px #0092ff;
-}
-.diceTrayFloor {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  color: #fff;
-  background-color: #126db3;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 20px;
-  width: 100%;
-  border-radius: 15px;
-  transition: 0.5s;
-  /* box-shadow: 0px 3px 6px 10px rgb(36, 36, 36) inset; */
-  /* transform: rotateX(20deg); */
-}
-.critMissTray {
-  box-shadow: 2px 5px 10px -5px #ff2019;
-}
-.critMissFloor {
-  background-color: #b30f09;
-}
-.critTray {
-  box-shadow: 2px 5px 10px -5px #19ff69;
-}
-.critFloor {
-  background-color: #00b33e;
+  flex-direction: column;
+  justify-content: space-between;
 }
 </style>
